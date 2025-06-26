@@ -10,11 +10,16 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const _dirname = path.resolve();
+
+// This provides the current working directory.
+// Using import.meta.url and fileURLToPath is a modern way to get __dirname in ES Modules.
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename); // This is C:\Users\e\Desktop\PebblyConnect\backend
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
@@ -24,16 +29,18 @@ app.use(cookieParser());
 // Routes
 app.use('/api/user', userRouter);
 
-// Serve frontend (if using Vite or React build)
-app.use(express.static(path.join(_dirname, '/frontend/dist')));
+// Determine the path to the root of your project (PebblyConnect)
+// This goes up one directory from 'backend'
+const projectRoot = path.resolve(__dirname, '..'); // This would be C:\Users\e\Desktop\PebblyConnect\
 
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(_dirname, 'frontend', 'dist', 'index.html'));
-});
+// Serve frontend build files
+// Now we join projectRoot with 'frontend/dist'
+app.use(express.static(path.join(projectRoot, 'frontend', 'dist')));
 
-// Optional test route
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
+// Catch-all route to serve the frontend's index.html
+// Again, resolve from projectRoot
+app.get('/{*path}', (req, res) => {
+  res.sendFile(path.resolve(projectRoot, 'frontend', 'dist', 'index.html'));
 });
 
 // Start Server
